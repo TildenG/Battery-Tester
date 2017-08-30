@@ -1,0 +1,311 @@
+<!doctype html>
+<html>
+<head>
+<title>Battery Tester</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, height=device-height, user-scalable=yes">
+<meta http-equiv="cache-control" content="max-age=0" />
+<meta http-equiv="cache-control" content="no-cache" />
+<meta http-equiv="cache-control" content="no-store" />
+<meta http-equiv="expires" content="0" />
+<meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+<meta http-equiv="pragma" content="no-cache" />
+<style type="text/css">
+            dummydeclaration { padding-left: 4em; } /* Firefox ignores first declaration for some reason */
+            tab1 { padding-left: 4em; }
+            tab2 { padding-left: 8em; }
+            tab3 { padding-left: 12em; }
+            tab4 { padding-left: 16em; }
+            tab5 { padding-left: 20em; }
+            tab6 { padding-left: 24em; }
+            tab7 { padding-left: 28em; }
+            tab8 { padding-left: 32em; }
+            tab9 { padding-left: 36em; }
+            tab10 { padding-left: 40em; }
+            tab11 { padding-left: 44em; }
+            tab12 { padding-left: 48em; }
+            tab13 { padding-left: 52em; }
+            tab14 { padding-left: 56em; }
+            tab15 { padding-left: 60em; }
+            tab16 { padding-left: 64em; }
+
+        </style>
+<script src="dygraph.min.js"></script>
+
+<style>
+    body{
+		background-color: #999;
+		background-image: url("background.jpg");
+	}
+	.dygraph-legend { background-color: #101015; text-align: right;  font-size: 18px;}
+	.dygraph-axis-label { color: white; }
+	#div_g1 {background-color: #101015; color: white;opacity: 0.9;}
+	#div_g1 {background-color: #101015; color: white;opacity: 0.9;}
+	#div_g2 {background-color: #101015; color: white;opacity: 0.9;}
+	#div_g3 {background-color: #101015; color: white;opacity: 0.9;}
+	#div_g4 {background-color: #101015; color: white;opacity: 0.9;}
+	#div_g5 {background-color: #101015; color: white;opacity: 0.9;}
+	#div_g6 {background-color: #101015; color: white;opacity: 0.9;}
+	#div_g7 {background-color: #101015; color: white;opacity: 0.9;}
+	#div_g8 {background-color: #101015; color: white;opacity: 0.9;}
+	</style>
+</head>
+<body onLoad="pageLoaded()">
+<audio id="myAudio">
+<source src="Click.mp3" type="audio/mpeg">
+</audio>
+<br>
+<table style="Width:100%"><tr><th>
+<button onclick="start()" style="width:60%;height:180%;"><b>Start</b></button><br></th><th>
+<button onclick="cancel()" style="width:60%;height:180%;"><b>Cancel</b></button><br></th>
+</tr></table>
+<br><br>
+<style>
+  .dygraph-legend {  text-align: right; font-size:21px; text-shadow: 2px 2px #000;}
+  .dygraph-title {position: absolute; text-align: center; font-weight: bold; z-index: 10;}
+  .results { text-align: left; font-weight: bold;background-color: #101015; color: white;opacity: 0.9;}
+  .chart { width: 100%; height: 33%; }
+  .chart-container { overflow: hidden; }
+  /*#div1 { float: left; }
+  #div2 { float: left; }
+  #div3 { float: left; clear: left; }
+  #div4 { float: left; }*/
+</style>
+<table style="Width:100%;padding: 4%;">
+<tr><td style="width:40%;">
+<div id="div_g1" class = "chart"></div><br><div id="results0" class = "results">Results:</div><br><br>
+</td><td style="width:40%;">
+<div id="div_g2" class = "chart"></div><br><div id="results1" class = "results">Results:</div><br><br></td></tr>
+<tr><th style="width:50%;">
+<div id="div_g3" class = "chart"></div><br><div id="results2" class = "results">Results:</div><br><br>
+</th><th style="width:50%;">
+<div id="div_g4" class = "chart"></div><br><div id="results3" class = "results">Results:</div><br><br></th></tr>
+<tr><th style="width:50%;">
+<div id="div_g5" class = "chart"></div><br><div id="results4" class = "results">Results:</div><br><br>
+</th><th style="width:50%;">
+<div id="div_g6" class = "chart"></div><br><div id="results5" class = "results">Results:</div><br><br></th></tr>
+<tr><th style="width:50%;">
+<div id="div_g7" class = "chart"></div><br><div id="results6" class = "results">Results:</div><br><br>
+</th><th style="width:50%;">
+<div id="div_g8" class = "chart"></div><br><div id="results7" class = "results">Results:</div><br><br></th></tr>
+</table>
+<script type="text/javascript">
+      var data = [ [],[] ];
+      var t = new Date();
+	  var MAX_BATTERIES = 8;
+	  for (var a = 0; a < 8; a++){
+		  data.push([]);
+	  };
+      var g = [];
+	  var aud = document.getElementById("myAudio");
+ /* @param {string} data      The data in CSV format.
+ * @param {string} delimeter [optional] a custom delimeter. Comma ',' by default
+ *                           The Delimeter must be a single character.
+ * @return {Array} array     A two dimensional array containing the data
+ * @throw {String} error     The method throws an error when there is an
+ *                           error in the provided data.
+ */ 
+function csv2array(data, delimeter) {
+  // Retrieve the delimeter
+  if (delimeter == undefined) 
+    delimeter = ',';
+  if (delimeter && delimeter.length > 1)
+    delimeter = ',';
+
+  // initialize variables
+  var newline = '\n';
+  var eof = '';
+  var i = 0;
+  var c = data.charAt(i);
+  var row = 0;
+  var col = 0;
+  var array = new Array();
+
+  while (c != eof) {
+    // skip whitespaces
+    while (c == ' ' || c == '\t' || c == '\r') {
+      c = data.charAt(++i); // read next char
+    }
+    
+    // get value
+    var value = "";
+    if (c == '\"') {
+      // value enclosed by double-quotes
+      c = data.charAt(++i);
+      
+      do {
+        if (c != '\"') {
+          // read a regular character and go to the next character
+          value += c;
+          c = data.charAt(++i);
+        }
+        
+        if (c == '\"') {
+          // check for escaped double-quote
+          var cnext = data.charAt(i+1);
+          if (cnext == '\"') {
+            // this is an escaped double-quote. 
+            // Add a double-quote to the value, and move two characters ahead.
+            value += '\"';
+            i += 2;
+            c = data.charAt(i);
+          }
+        }
+      }
+      while (c != eof && c != '\"');
+      
+      if (c == eof) {
+        throw "Unexpected end of data, double-quote expected";
+      }
+
+      c = data.charAt(++i);
+    }
+    else {
+      // value without quotes
+      while (c != eof && c != delimeter && c!= newline && c != ' ' && c != '\t' && c != '\r') {
+        value += c;
+        c = data.charAt(++i);
+      }
+    }
+
+    // add the value to the array
+    if (array.length <= row) 
+      array.push(new Array());
+    array[row].push(Number(value));
+    
+    // skip whitespaces
+    while (c == ' ' || c == '\t' || c == '\r') {
+      c = data.charAt(++i);
+    }
+
+    // go to the next row or column
+    if (c == delimeter) {
+      // to the next column
+      col++;
+    }
+    else if (c == newline) {
+      // to the next row
+      col = 0;
+      row++;
+    }
+    else if (c != eof) {
+      // unexpected character
+      throw "Delimiter expected after character " + i;
+    }
+    
+    // go to the next character
+    c = data.charAt(++i);
+  }  
+  
+  return array;
+};
+	  function pageLoaded(){
+		  var loadNextData=false;
+		  var graphNumber = 0;
+		  loadFullGraphData(graphNumber);
+		  function loadFullGraphData(dataNumber){
+			  var oReq = new XMLHttpRequest();
+		  	oReq.open("GET","dataFile"+dataNumber+".csv",true);
+		  	oReq.onload = function(e){
+			  var theData = oReq.responseText;
+			  console.log(theData);
+			  var a = csv2array(theData);
+			  for (c = 0; c < a.length ; c++){
+			  	data[dataNumber].push(a[c]);
+			  }
+			  console.log(data[dataNumber]);
+			  g.push(new Dygraph(document.getElementById("div_g" + (dataNumber + 1)), data[dataNumber], // data[7] a
+                          {
+                            drawPoints: true,
+							labels: ['Seconds', 'Voltage' , 'Current'],
+							legend: 'always',
+							title: 'Battery ' + (dataNumber + 1),
+							titleHeight: 32,
+							rollPeriod: 1,
+							showRangeSelector: true,
+							rangeSelectorPlotFillColor: 'MediumSlateBlue',
+              				rangeSelectorPlotFillGradientColor: 'rgba(123, 104, 238, 0)',
+              				colorValue: 0.9,
+              				fillAlpha: 0.4
+                          }));
+				if (graphNumber < MAX_BATTERIES - 1){
+					graphNumber ++;
+					loadFullGraphData(graphNumber);
+				}else{
+					window.intervalId = setInterval(function() {
+		  			if (window.feedbackFrame.bv[0] !== undefined){
+		  				for (var i = 0; i < 8; i++) {
+							if (window.feedbackFrame.cap[i] !== -1){
+							var capacity = window.feedbackFrame.cap[i] * 1000;
+							document.getElementById("results"+i).innerHTML =  "Capacity: " + (capacity.toFixed(4)) +
+							" mAh<br>" + "Watt Hours: " + window.feedbackFrame.wH[i].toFixed(4) + "Wh";
+							}else if(window.feedbackFrame.bv[i] > 0 ){
+								var runtimeHours = 0;
+								var hzero ="";
+								var runtimeMinutes = parseInt(window.feedbackFrame.currentTime / 60);
+								if (runtimeMinutes > 60){
+									runtimeHours = parseInt(runtimeMinutes / 60);
+									runtimeMinutes = runtimeMinutes - (runtimeHours * 60);
+									};
+								if (runtimeHours < 10){hzero ="0";};
+								var mzero ="";
+								if (runtimeMinutes < 10){mzero ="0";};
+								var szero ="";
+								var runtimeSeconds = Math.round(((window.feedbackFrame.currentTime / 60) - runtimeMinutes) * 60);
+								if (runtimeSeconds < 10){szero = "0";};
+								var prediction = "";
+								if (window.feedbackFrame.currentTime > 25){
+									if (data[i][20][1] !== undefined){
+									if (data[i][20][1] >= 4.0){prediction = "<br>Prediction: GOOD CELL, likley to be over 2000 mAh"};
+									if (data[i][20][1] < 4.0){prediction = "<br>Prediction: GOOD CELL, likley to be under 2000 mAh"};
+									if (data[i][20][1] < 3.8){prediction = "<br>Prediction: OK CELL, likley to be under 1700 mAh"};
+									if (data[i][20][1] < 3.7){prediction = "<br>Prediction: BAD CELL, likley to be under 1500 mAh"};
+									if (data[i][20][1] < 3.6){prediction = "<br>Prediction: BAD CELL, likley to be under 1000 mAh"};
+									if (data[i][20][1] < 3.5){prediction = "<br>Prediction: BAD CELL, likley to be under 500 mAh"};
+									};
+								};
+								document.getElementById("results"+i).innerHTML = "Runtime: " + hzero + runtimeHours + ":" + mzero +
+								runtimeMinutes + ":" + szero + runtimeSeconds + "<tab1>Voltage: </tab1>" + window.feedbackFrame.bv[i].toFixed(4)
+								+ "V" + "<tab1>Current: </tab1>" + window.feedbackFrame.ba[i].toFixed(4) + "A<br>" + "Watt Hours: " + 
+								window.feedbackFrame.wH[i].toFixed(4) + "Wh" + "<tab1></tab1>" + prediction;
+							};
+        					var x = window.feedbackFrame.currentTime;//new Date();  // current time
+							if (window.feedbackFrame.bv[i] > 0){
+        						data[i].push([x, window.feedbackFrame.bv[i] , window.feedbackFrame.ba[i]]);
+        						g[i].updateOptions( { 'file': data[i] } );
+							}
+		  				};
+	  				};
+      				}, 1000);
+					var xhttp = new XMLHttpRequest();
+        			xhttp.open("GET", "/GetResults", true);
+        			xhttp.send();
+					/*var xhttp = new XMLHttpRequest();
+	  				var x = new Date();  // current time
+        			xhttp.open("GET", "/Time," + x, true);
+        			xhttp.send();*/
+				}
+		  	};
+			oReq.send();
+		  };
+	  
+	  };
+		function start(){
+			var xhttp = new XMLHttpRequest();
+        	xhttp.open("GET", "/Start" , true);
+        	xhttp.send();
+			setTimeout(function() {
+  				location.reload();
+			}, 1500);
+			aud.play();
+		};
+		function cancel(){
+			var xhttp = new XMLHttpRequest();
+        	xhttp.open("GET", "/Cancel" , true);
+        	xhttp.send();
+			aud.play();
+		};
+</script>
+<iframe name="feedbackFrame" type="text/html" frameborder="0" height="345" width="100%" src="empty.html" style="display:none;"><p>Your browser does not support iframes.</p></iframe>
+</body>
+</html>

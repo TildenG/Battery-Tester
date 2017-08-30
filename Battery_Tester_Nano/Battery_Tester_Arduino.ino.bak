@@ -1,0 +1,20 @@
+
+
+void setup() {
+  Serial.begin ( 2000000 );
+  }
+  
+  void loop() {
+  checkForSerialData();
+  
+  }
+  
+  void checkForSerialData(){
+	if ( Serial.available()) {// if data available over serial
+		size_t len = Serial.available();
+		uint8_t sbuf[len];
+		Serial.readBytes(sbuf, len);
+		// TODO:process data here
+	}
+  
+  }
