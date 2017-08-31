@@ -238,7 +238,7 @@ function csv2array(data, delimeter) {
 							if (window.feedbackFrame.cap[i] !== -1){
 							var capacity = window.feedbackFrame.cap[i] * 1000;
 							document.getElementById("results"+i).innerHTML =  "Capacity: " + (capacity.toFixed(4)) +
-							" mAh<br>" + "Watt Hours: " + window.feedbackFrame.wH[i].toFixed(4) + "Wh";
+							" mAh<br>" + "Watt Hours: " + window.feedbackFrame.wH[i].toFixed(4) + "Wh" + "<br>ESR: " + window.feedbackFrame.esr[i].toFixed(4) + "Ohms";
 							}else if(window.feedbackFrame.bv[i] > 0 ){
 								var runtimeHours = 0;
 								var hzero ="";
@@ -267,7 +267,7 @@ function csv2array(data, delimeter) {
 								document.getElementById("results"+i).innerHTML = "Runtime: " + hzero + runtimeHours + ":" + mzero +
 								runtimeMinutes + ":" + szero + runtimeSeconds + "<tab1>Voltage: </tab1>" + window.feedbackFrame.bv[i].toFixed(4)
 								+ "V" + "<tab1>Current: </tab1>" + window.feedbackFrame.ba[i].toFixed(4) + "A<br>" + "Watt Hours: " + 
-								window.feedbackFrame.wH[i].toFixed(4) + "Wh" + "<tab1></tab1>" + prediction;
+								window.feedbackFrame.wH[i].toFixed(4) + "Wh" + "<tab1></tab1>" + prediction + "<br>ESR: " + window.feedbackFrame.esr[i].toFixed(4) + "Ohms";
 							};
         					var x = window.feedbackFrame.currentTime;//new Date();  // current time
 							if (window.feedbackFrame.bv[i] > 0){

@@ -13,8 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#pragma GCC optimize ("-O2")
  #define MAX_MEDIAN_SAMPLES 9                                 // use an odd number
  
  void addToFilter(int);
- void resetFilter();
- double getMedian();
+ void resetFilter(void);
+ double getMedian(void);

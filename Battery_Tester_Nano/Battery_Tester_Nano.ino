@@ -25,11 +25,18 @@ long timeInverval = 1000;
 long nextMs = 0;
 byte mosfetPins[MAX_BATTERIES];
 boolean batteryState[MAX_BATTERIES];
+double ESRVoltage[MAX_BATTERIES];
 String recieveString;
 boolean running = false;
 int batteriesStopped = 0;
 double resistorRatio = 10.0/82.8;
 
+void stop(void);
+void start(void);
+void checkForSerialData(void);
+void readAllBatteries(void);
+long readVcc(void);
+double analogCompensation(void);
 
 void setup() {
   for (int a=0;a<MAX_BATTERIES;a++){ // setup pins and turn all batteries off !
@@ -99,14 +106,46 @@ void setup() {
 	running = false;
 	}
   }
-  void start(){
+void start(){
+  double osVoltage[MAX_BATTERIES];
+  double voltage = 0.0;
+  for (int a=0;a<MAX_BATTERIES;a++){ // make sure all batteries are off
+		digitalWrite(mosfetPins[a],LOW);
+		}
+	delay(50);
+	for (int a=0; a<8;a++){// get open circuit voltage
+		resetFilter();
+		for (int b=0 ; b<MAX_MEDIAN_SAMPLES ;b++){
+			addToFilter(analogRead(a));
+		}
+		voltage = (getMedian() / 1023.0) * 5.0 * analogCompensation();
+		voltage = (resistorRatio * voltage) + voltage; // correct for voltage divider
+		osVoltage[a] = voltage;
+	}
+		
   for (int a=0;a<MAX_BATTERIES;a++){ // setup pins and turn all batteries on
 		digitalWrite(mosfetPins[a],HIGH);
 		batteryState[a] = discharging;
 	}
 	running = true;
 	batteriesStopped = 0;
-  }
+	delay(10);
+	for (int a=0; a<8;a++){// calculate ESR Voltage drop
+		resetFilter();
+		for (int b=0 ; b<MAX_MEDIAN_SAMPLES ;b++){
+			addToFilter(analogRead(a));
+		}
+		voltage = (getMedian() / 1023.0) * 5.0 * analogCompensation();
+		voltage = (resistorRatio * voltage) + voltage; // correct for voltage divider
+		ESRVoltage[a] = osVoltage[a] - voltage;
+	}
+	String data = "ESR";
+    for (int a=0;a<MAX_BATTERIES;a++){
+		data += ",";
+		data += String(ESRVoltage[a],4);
+	}
+	Serial.println(data); // send ESR info
+}
   void stop(){
   double voltage = 0.0;
   String data = "data";

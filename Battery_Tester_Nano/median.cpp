@@ -18,8 +18,6 @@ double currentMedianSample;
 double medianBuffer[MAX_MEDIAN_SAMPLES];
 double medianResult = -1;
 
-
-  //addToFilter(pingDistance);
 void addToFilter(int pD){
   currentMedianSample++;
     for (int a = 0 ; a < MAX_MEDIAN_SAMPLES; a++){
@@ -33,11 +31,6 @@ void addToFilter(int pD){
     }
     if (currentMedianSample == MAX_MEDIAN_SAMPLES){
       medianResult = medianBuffer[int(MAX_MEDIAN_SAMPLES / 2.0)];
-//      for (int a = 0; a < MAX_MEDIAN_SAMPLES; a++){
-//      Serial.print(" "+String(medianBuffer[a]));
-//      }
-//      Serial.println();
-//      Serial.println("D"+String(medianResult));
       resetFilter();
     }
 }
@@ -50,4 +43,3 @@ void resetFilter(){
 double getMedian(){
   return medianResult;
 }
-

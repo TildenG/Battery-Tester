@@ -40,14 +40,16 @@ String currentDataString;
 boolean currentDataStringComplete = true;
 
 struct batteryInformation{
-	double currentVoltage=0;
-	double currentCurrent=0;
-	double totalCurrent=0;
+	double currentVoltage=0.0;
+	double currentCurrent=0.0;
+	double totalCurrent=0.0;
 	long startTime = 0;
 	double resistorValue = 1.95; // tweak for better accuracy in startTest function
 	long stopTime = -1;
-	double capacity = -1;
-	double totalWattHours = 0;
+	double capacity = -1.0;
+	double totalWattHours = 0.0;
+	double ESR = 0.0;
+	double ESRV = 0.0;
 };
 batteryInformation batteryinfo[MAX_BATTERIES];
 
@@ -250,7 +252,7 @@ String fileString = req.substring(4, (req.length() - 9));
 					batteryinfo[a].capacity = fileAh;
 					batteryinfo[a].totalWattHours = fileWh;
 				}
-				dataFile.close();
+				dataFile.close();//TODO: load ESR results on reload page so ESP has data after reset
 			}
 		return;
 		}
@@ -282,6 +284,12 @@ String fileString = req.substring(4, (req.length() - 9));
 				for (int a=0;a<MAX_BATTERIES;a++){
 				s += F("wH.push( ");
 				s += String(batteryinfo[a].totalWattHours,4);
+				s += F(");");
+				}
+				s += F("\r\nvar esr = [];");
+				for (int a=0;a<MAX_BATTERIES;a++){
+				s += F("esr.push( ");
+				s += String(batteryinfo[a].ESR,4);
 				s += F(");");
 				}
 				s += F(" </script></body></html>\n");
@@ -337,6 +345,10 @@ void startInStationMode(){
 					batteryinfo[a].currentCurrent = (batteryinfo[a].currentVoltage - mosfetVoltageDrop) / batteryinfo[a].resistorValue;
 					batteryinfo[a].totalCurrent +=  batteryinfo[a].currentCurrent / 3600.0; // at one sample per second
 					batteryinfo[a].totalWattHours += (batteryinfo[a].currentCurrent / 3600.0) * batteryinfo[a].currentVoltage;
+					if (batteryinfo[a].ESR == 0){
+						batteryinfo[a].ESR = batteryinfo[a].ESRV / batteryinfo[a].currentCurrent;
+						saveESRResults(a);// save ESR to SPIFFS
+					}
 				}
 				//Serial.println(dataString);
 				dataString.remove(0,nextComma+1);
@@ -367,6 +379,19 @@ void startInStationMode(){
 						dataFile.println(String((millis() - batteryinfo[a].startTime)/ 1000) + "," + String(batteryinfo[a].currentVoltage,4) + "," + String(batteryinfo[a].currentCurrent,4));
 						dataFile.close();
 				}
+			}
+		}else if (currentDataString.startsWith("ESR")){
+			currentDataString.remove(0, currentDataString.indexOf(",")+1);
+			String dataString = currentDataString;
+			for (int a=0;a<MAX_BATTERIES;a++){
+				int nextComma = dataString.indexOf(",");
+				String theData = dataString.substring(0,nextComma);
+				double ESRVoltage = (long(theData.toFloat()*100000.0) / 100000.0); // round back to 5 dp
+				if (ESRVoltage > 0){
+					ESRVoltage += 0.00001; // TODO: complete fix for rounding error
+					batteryinfo[a].ESRV = ESRVoltage;
+				}
+				dataString.remove(0,nextComma+1);
 			}
 		}
 		}
@@ -402,6 +427,8 @@ void startTest(){// setup startup variables and send start to arduino
 		batteryinfo[a].resistorValue = 1.95;
 		batteryinfo[a].stopTime = -1;
 		batteryinfo[a].capacity = -1;
+		batteryinfo[a].ESR = 0.0;
+		batteryinfo[a].ESRV = 0.0;
 	}
 	batteriesStopped = 0;
 	startFanDelay = false;
@@ -437,9 +464,18 @@ void saveResults(int batteryNumber){
 	String fileName = "/resultsFile"+String(batteryNumber)+".csv";
 	File dataFile = SPIFFS.open(fileName, "w");
 	if (!dataFile){
-		Serial.println("Failed to open/create file");
+		Serial.println(F("Failed to open/create file"));
 	}
 	dataFile.println(String(batteryinfo[batteryNumber].capacity,4) + "," + String(batteryinfo[batteryNumber].totalWattHours,4));
+	dataFile.close();
+}
+void saveESRResults(int batteryNumber){
+	String fileName = "/ESRResultsFile"+String(batteryNumber)+".txt";
+	File dataFile = SPIFFS.open(fileName, "w");
+	if (!dataFile){
+		Serial.println(F("Failed to open/create file"));
+	}
+	dataFile.println(String(batteryinfo[batteryNumber].ESR,4));
 	dataFile.close();
 }
 void checkFanState(){
