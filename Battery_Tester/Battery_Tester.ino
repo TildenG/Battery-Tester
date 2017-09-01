@@ -55,23 +55,24 @@ batteryInformation batteryinfo[MAX_BATTERIES];
 
 int batteriesStopped = 0;
 boolean startFanDelay = false;
-long fanStopAt = 0;
+unsigned long fanStopAt = 0;
 
 void setup() {
-  system_update_cpu_freq(160);
+  system_update_cpu_freq(80);	// 80 or 160
   system_phy_set_max_tpw(35); // 0 - 82 radio TX power
   pinMode(wifiLEDPin,OUTPUT);
   pinMode(fanPin,OUTPUT);
   pinMode(tonePin,OUTPUT);
   Serial.begin ( 2000000 );
   Serial.println("");
-  wifi_station_set_hostname("Battery tester");
+  char name[] = "Battery tester";
+  wifi_station_set_hostname(name);
   startInStationMode();
-  long stationModeTimeout = millis() + 15000;
+  unsigned long stationModeTimeout = millis() + 15000;
   while ( WiFi.status() != WL_CONNECTED ) {
 	if (millis() > stationModeTimeout){
 		setupAP();
-		Serial.println("Switching to AP mode, IP 192.168.4.1");
+		Serial.println(F("Switching to AP mode, IP 192.168.4.1"));
 		break;
 	}
 	  wifiLEDPinState = !wifiLEDPinState;
@@ -80,7 +81,7 @@ void setup() {
       Serial.print ( "." );
     }
 	if ( MDNS.begin ( "Tester" ) ) {
-		Serial.println ( "\r\n MDNS responder started, type ""Tester.local"" into a web browser" );
+		Serial.println ( F("\r\n MDNS responder started, type ""Tester.local"" into a web browser") );
 	}
 	analogWrite(wifiLEDPin , 511);
   Serial.println(WiFi.localIP());
@@ -148,7 +149,7 @@ String s = F("HTTP/1.1 200 OK\r\ncache-control: max-age = 0\r\ncontent-length: "
     theBuffer.close();
     return;
   }
-  int bufferLength = theBuffer.size();
+  uint bufferLength = theBuffer.size();
   if ( serverClients[currentClient].write(theBuffer,2920) <  bufferLength){
   }
   yield();
@@ -217,7 +218,7 @@ String fileString = req.substring(4, (req.length() - 9));
 		if (fileString.indexOf("Cancel") != -1){
 		serverClients[currentClient].write( closeConnectionHeader.c_str(),closeConnectionHeader.length() );
         yield();
-		Serial.println("STOP STOP");
+		Serial.println(F("STOP STOP"));
 		batteriesStopped = MAX_BATTERIES;
 		startFanDelay = true;
 		fanStopAt = millis() + 5 * 60 * 1000; // 5 minutes
@@ -235,11 +236,11 @@ String fileString = req.substring(4, (req.length() - 9));
 				String fileName = "/resultsFile"+String(a)+".csv";
 				File dataFile = SPIFFS.open(fileName, "r");
 				if (!dataFile){
-					Serial.println("Failed to open/create file");
+					Serial.println(F("Failed to open/create file"));
 				}
 				//dataString = dataFile.readString();
 				dataString ="";
-				for (int b=0; b<dataFile.size();b++){
+				for (uint b=0; b<dataFile.size();b++){
 					dataString += char(dataFile.read());
 				}
 				nextComma = dataString.indexOf(",");
@@ -252,7 +253,25 @@ String fileString = req.substring(4, (req.length() - 9));
 					batteryinfo[a].capacity = fileAh;
 					batteryinfo[a].totalWattHours = fileWh;
 				}
-				dataFile.close();//TODO: load ESR results on reload page so ESP has data after reset
+				dataFile.close();
+			}
+			for (int a=0;a<MAX_BATTERIES;a++){
+				String fileName = "/ESRResultsFile"+String(a)+".txt";
+				File dataFile = SPIFFS.open(fileName, "r");
+				if (!dataFile){
+					Serial.println(F("Failed to open/create file"));
+				}
+				dataString ="";
+				for (uint b=0; b<dataFile.size();b++){
+					dataString += char(dataFile.read());
+				}
+				nextComma = dataString.indexOf(",");
+				theData = dataString.substring(0,nextComma);
+				fileAh = (long(theData.toFloat()*100000.0) / 100000.0); // round back to 5 dp
+				if (!batteryinfo[a].ESR){
+					batteryinfo[a].ESR = fileAh;
+				}
+				dataFile.close();
 			}
 		return;
 		}
@@ -356,7 +375,7 @@ void startInStationMode(){
 						String fileName = "/dataFile"+String(a)+".csv";
 						File dataFile = SPIFFS.open(fileName, "a");
 						if (!dataFile){
-							Serial.println("Failed to open/create file");
+							Serial.println(F("Failed to open/create file"));
 						}
 						if ( batteryinfo[a].currentVoltage == 0 && batteryinfo[a].stopTime < 0){
 							batteryinfo[a].stopTime = millis() - batteryinfo[a].startTime;
@@ -404,7 +423,7 @@ void startTest(){// setup startup variables and send start to arduino
 			String fileName = "/dataFile"+String(a)+".csv"; //create file in spiffs for storage
 			File dataFile = SPIFFS.open(fileName, "w");
 			if (!dataFile){
-				Serial.println("Failed to open/create file");
+				Serial.println(F("Failed to open/create file"));
 			}
 			dataFile.println(F("0,0,0"));//Seconds,Voltage,Current
 			dataFile.close();
@@ -413,7 +432,7 @@ void startTest(){// setup startup variables and send start to arduino
 			String fileName = "/resultsFile"+String(a)+".csv";
 			File dataFile = SPIFFS.open(fileName, "w");
 			if (!dataFile){
-				Serial.println("Failed to open/create file");
+				Serial.println(F("Failed to open/create file"));
 			}
 			dataFile.println(F("0,0"));
 			dataFile.close();
@@ -433,7 +452,7 @@ void startTest(){// setup startup variables and send start to arduino
 	batteriesStopped = 0;
 	startFanDelay = false;
 	digitalWrite(fanPin,HIGH); // turn on the fan
-	Serial.println("START START");
+	Serial.println(F("START START"));
 }
 void testForFiles(){// make sure there are files to prevent webpage errors
 
@@ -442,7 +461,7 @@ void testForFiles(){// make sure there are files to prevent webpage errors
 			String fileName = "/dataFile"+String(a)+".csv";
 			File dataFile = SPIFFS.open(fileName, "w");
 			if (!dataFile){
-				Serial.println("Failed to open/create file");
+				Serial.println(F("Failed to open/create file"));
 			}
 			dataFile.println(F("0,0,0"));
 			dataFile.close();
@@ -453,9 +472,20 @@ void testForFiles(){// make sure there are files to prevent webpage errors
 			String fileName = "/resultsFile"+String(a)+".csv";
 			File dataFile = SPIFFS.open(fileName, "w");
 			if (!dataFile){
-				Serial.println("Failed to open/create file");
+				Serial.println(F("Failed to open/create file"));
 			}
 			dataFile.println(F("0,0"));
+			dataFile.close();
+		}
+	}
+	if (!SPIFFS.exists("/ESRResultsFile0.txt")){
+		for (int a=0;a<MAX_BATTERIES;a++){
+			String fileName = "/ESRResultsFile"+String(a)+".txt";
+			File dataFile = SPIFFS.open(fileName, "w");
+			if (!dataFile){
+				Serial.println(F("Failed to open/create file"));
+			}
+			dataFile.println(F("0"));
 			dataFile.close();
 		}
 	}
