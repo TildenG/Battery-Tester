@@ -437,6 +437,15 @@ void startTest(){// setup startup variables and send start to arduino
 			dataFile.println(F("0,0"));
 			dataFile.close();
 		}
+		for (int a=0;a<MAX_BATTERIES;a++){// create next ESR file to use, this will erase the last file
+			String fileName = "/ESRResultsFile"+String(a)+".txt";
+			File dataFile = SPIFFS.open(fileName, "w");
+			if (!dataFile){
+				Serial.println(F("Failed to open/create file"));
+			}
+			dataFile.println(F("0"));
+			dataFile.close();
+		}
 	for (int a=0;a<MAX_BATTERIES;a++){
 		batteryinfo[a].currentVoltage=0;
 		batteryinfo[a].currentCurrent=0;
