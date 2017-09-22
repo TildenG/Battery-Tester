@@ -44,7 +44,7 @@ struct batteryInformation{
 	double currentCurrent=0.0;
 	double totalCurrent=0.0;
 	long startTime = 0;
-	double resistorValue = 1.95; // tweak for better accuracy in startTest function
+	double resistorValue = 1.95;  //tweak for better accuracy in startTest function
 	long stopTime = -1;
 	double capacity = -1.0;
 	double totalWattHours = 0.0;
@@ -58,7 +58,7 @@ boolean startFanDelay = false;
 unsigned long fanStopAt = 0;
 
 void setup() {
-  system_update_cpu_freq(80);	// 80 or 160
+  system_update_cpu_freq(160);	// 80 or 160
   system_phy_set_max_tpw(35); // 0 - 82 radio TX power
   pinMode(wifiLEDPin,OUTPUT);
   pinMode(fanPin,OUTPUT);
@@ -105,8 +105,7 @@ void loop() {
   checkFanState();
 }
 
-void setupAP()
-{
+void setupAP(){
   const char WiFiAPPSK[] = "12345678";
   WiFi.mode(WIFI_AP);
   const char *ssid = "BatteryTester";
@@ -461,7 +460,13 @@ void startTest(){// setup startup variables and send start to arduino
 	batteriesStopped = 0;
 	startFanDelay = false;
 	digitalWrite(fanPin,HIGH); // turn on the fan
+	//clear serial buffer of any old data
+	while (Serial.available()){
+	Serial.read();
+	}
 	Serial.println(F("START START"));
+	currentDataString = "";
+	currentDataStringComplete = false;
 }
 void testForFiles(){// make sure there are files to prevent webpage errors
 
