@@ -324,8 +324,8 @@ String fileString = req.substring(4, (req.length() - 9));
 void startInStationMode(){
 		WiFi.mode(WIFI_STA);
 		delay(1);
-        char  ssid[33]  = "NobodySeenMeDoItNobodyCanProveAg";
-        char  password[64]  = "ThisIsTheNewKey17.d"; 
+        char  ssid[33]  = "AP_Name";
+        char  password[64]  = "AP_Password"; 
         struct  station_config  stationConf;  
         stationConf.bssid_set = 0;            //need  not check MAC address of  AP
         os_memcpy(&stationConf.ssid,  ssid, 33);  
