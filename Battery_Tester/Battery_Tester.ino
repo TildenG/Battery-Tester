@@ -324,8 +324,8 @@ String fileString = req.substring(4, (req.length() - 9));
 void startInStationMode(){
 		WiFi.mode(WIFI_STA);
 		delay(1);
-        char  ssid[33]  = "AP_Name";
-        char  password[64]  = "AP_Password"; 
+        char  ssid[33]  = "AP_Name"; 
+        char  password[64]  = "AP_Password";
         struct  station_config  stationConf;  
         stationConf.bssid_set = 0;            //need  not check MAC address of  AP
         os_memcpy(&stationConf.ssid,  ssid, 33);  
@@ -357,8 +357,13 @@ void startInStationMode(){
 			for (int a=0;a<MAX_BATTERIES;a++){
 				int nextComma = dataString.indexOf(",");
 				String theData = dataString.substring(0,nextComma);
-				batteryinfo[a].currentVoltage = (long(theData.toFloat()*100000.0) / 100000.0); // round back to 5 dp
-				if (batteryinfo[a].currentVoltage > 0){
+				batteryinfo[a].currentVoltage = (long(theData.toFloat()*100000.0) / 100000.0); // round back to 5 dp (long(theData.toFloat()*100000.0) / 100000.0);
+				if (batteryinfo[a].currentVoltage > 1 && batteryinfo[a].stopTime > 0){ 			// recieved false stop
+					batteryinfo[a].stopTime = -1;	// reset and continue
+					batteryinfo[a].capacity = -1;
+					batteriesStopped--;
+				}
+				if (batteryinfo[a].currentVoltage > 0 && batteryinfo[a].stopTime < 0){
 					batteryinfo[a].currentVoltage += 0.00001; // TODO: complete fix for rounding error
 					batteryinfo[a].currentCurrent = (batteryinfo[a].currentVoltage - mosfetVoltageDrop) / batteryinfo[a].resistorValue;
 					batteryinfo[a].totalCurrent +=  batteryinfo[a].currentCurrent / 3600.0; // at one sample per second
